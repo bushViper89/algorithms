@@ -36,10 +36,12 @@ const item: {
 const BubbleSort = ({ count }: Props) => {
   const containerRef = useRef<Container>(null);
   const [list, setList] = useState<List>([]);
+  const [isComplete, setIsComplte] = useState<boolean>(false);
   const [isPending, setIsPending] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
 
   const initialize = useCallback(() => {
+    setIsComplte(false);
     setProgress(0);
 
     const arr = new Array(count).fill(null).map((_, idx) => {
@@ -120,6 +122,7 @@ const BubbleSort = ({ count }: Props) => {
       }
     }
 
+    setIsComplte(true);
     setIsPending(false);
   }, []);
 
@@ -160,7 +163,10 @@ const BubbleSort = ({ count }: Props) => {
         <Button disabled={isPending} onClick={initialize}>
           초기화
         </Button>
-        <Button disabled={isPending} onClick={() => sortBubble([...list])}>
+        <Button
+          disabled={isPending || isComplete}
+          onClick={() => sortBubble([...list])}
+        >
           정렬
         </Button>
       </div>
