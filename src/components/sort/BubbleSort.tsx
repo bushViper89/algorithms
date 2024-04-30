@@ -4,14 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { delay } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import ListItem from "./ListItem";
 
 interface Props {
   count: number;
 }
 
-type Container = HTMLUListElement | null;
+type Container = HTMLDivElement | null;
 type List = { key: number; value: number }[];
-type Target = HTMLLIElement | null | undefined;
+type Target = HTMLDivElement | null | undefined;
 
 const item: {
   class: {
@@ -140,10 +141,10 @@ const BubbleSort = ({ count }: Props) => {
       </div>
 
       <div className="w-full overflow-y-auto">
-        <ul ref={containerRef} className="relative select-none w-full h-16">
+        <div ref={containerRef} className="relative select-none w-full h-16">
           {list?.map((obj, idx) => {
             return (
-              <li
+              <ListItem
                 id={`${item.id}${obj.key}`}
                 key={`${item.id}${obj.key}`}
                 style={{
@@ -153,10 +154,10 @@ const BubbleSort = ({ count }: Props) => {
                 className="transition-all duration-700 absolute grid place-content-center aspect-[1/1] border shadow-md rounded"
               >
                 {obj.value}
-              </li>
+              </ListItem>
             );
           })}
-        </ul>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
