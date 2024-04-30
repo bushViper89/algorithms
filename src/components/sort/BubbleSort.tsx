@@ -78,6 +78,10 @@ const BubbleSort = ({ count }: Props) => {
         const bol = arr[idx].value > arr[idx + 1].value;
 
         if (target && compareTarget) {
+          container &&
+            container.parentElement &&
+            (container.parentElement.scrollLeft = target.offsetLeft);
+
           target.classList.add(...item.class.active);
           compareTarget.classList.add(...item.class.active);
 
