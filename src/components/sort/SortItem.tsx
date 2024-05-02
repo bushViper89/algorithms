@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react";
 
-const ListItem = ({
+const SortItem = ({
   children,
   className,
   ...props
@@ -15,4 +15,4 @@ const ListItem = ({
   );
 };
 
-export default ListItem;
+export default SortItem;

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { delay } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import ListItem from "./ListItem";
+import SortItem from "./SortItem";
 
 interface Props {
   count: number;
@@ -16,8 +16,8 @@ type Target = HTMLDivElement | null | undefined;
 
 const item: {
   class: {
-    active: string[];
-    disabled: string[];
+    compare: string[];
+    complete: string[];
   };
   delay: number;
   id: string;
@@ -25,8 +25,8 @@ const item: {
   width: string;
 } = {
   class: {
-    active: ["bg-blue-200"],
-    disabled: ["bg-slate-200"],
+    compare: ["bg-blue-200", "border-0"],
+    complete: ["bg-slate-200"],
   },
   delay: 500,
   id: "bubble-item-",
@@ -50,7 +50,7 @@ const BubbleSort = ({ count }: Props) => {
         const el = document.getElementById(`${item.id}${idx}`);
 
         if (el) {
-          el.classList.remove(...item.class.disabled);
+          el.classList.remove(...item.class.complete);
           el.style.width = item.width;
           el.style.left = `calc(${item.width} * ${idx} + ${item.gap} * ${idx})`;
         }
@@ -85,8 +85,8 @@ const BubbleSort = ({ count }: Props) => {
             container.parentElement &&
             (container.parentElement.scrollLeft = target.offsetLeft);
 
-          target.classList.add(...item.class.active);
-          compareTarget.classList.add(...item.class.active);
+          target.classList.add(...item.class.compare);
+          compareTarget.classList.add(...item.class.compare);
 
           await delay(item.delay);
 
@@ -101,19 +101,19 @@ const BubbleSort = ({ count }: Props) => {
 
           await delay(item.delay);
 
-          target.classList.remove(...item.class.active);
-          compareTarget.classList.remove(...item.class.active);
+          target.classList.remove(...item.class.compare);
+          compareTarget.classList.remove(...item.class.compare);
 
           await delay(item.delay);
 
           if (max === idx + 1) {
             bol
-              ? target.classList.add(...item.class.disabled)
-              : compareTarget.classList.add(...item.class.disabled);
+              ? target.classList.add(...item.class.complete)
+              : compareTarget.classList.add(...item.class.complete);
 
             if (max === 1) {
-              target.classList.add(...item.class.disabled);
-              compareTarget.classList.add(...item.class.disabled);
+              target.classList.add(...item.class.complete);
+              compareTarget.classList.add(...item.class.complete);
             }
 
             setProgress(((arr.length - max) / (arr.length - 1)) * 100);
@@ -132,7 +132,7 @@ const BubbleSort = ({ count }: Props) => {
   }, []);
 
   return (
-    <div className="grid gap-3 w-full">
+    <div className="grid gap-2 w-full">
       <div className="flex items-center gap-2">
         <div>진행률</div>
         <div className="grow">
@@ -144,7 +144,7 @@ const BubbleSort = ({ count }: Props) => {
         <div ref={containerRef} className="relative select-none w-full h-16">
           {list?.map((obj, idx) => {
             return (
-              <ListItem
+              <SortItem
                 id={`${item.id}${obj.key}`}
                 key={`${item.id}${obj.key}`}
                 style={{
@@ -154,7 +154,7 @@ const BubbleSort = ({ count }: Props) => {
                 className="transition-all duration-700 absolute grid place-content-center aspect-[1/1] border shadow-md rounded"
               >
                 {obj.value}
-              </ListItem>
+              </SortItem>
             );
           })}
         </div>
