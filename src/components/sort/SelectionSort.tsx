@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { itemOptions } from "@/app/constant/sort";
 import { delay } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import SortItem from "@/components/sort/SortItem";
 import { Progress } from "@/components/ui/progress";
+import SortItem from "@/components/sort/SortItem";
 
 interface Props {
   count: number;
@@ -15,8 +15,6 @@ type Container = HTMLDivElement | null;
 type List = { key: number; value: number }[];
 type Target = HTMLDivElement | null | undefined;
 
-itemOptions.id = "select-item-";
-
 const SelectionSort = ({ count }: Props) => {
   const containerRef = useRef<Container>(null);
   const [list, setList] = useState<List>([]);
@@ -24,18 +22,26 @@ const SelectionSort = ({ count }: Props) => {
   const [isPending, setIsPending] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
 
+  const itemOpt = useMemo(
+    () => ({
+      ...itemOptions,
+      id: "select-item-",
+    }),
+    []
+  );
+
   const initialize = useCallback(() => {
     setIsComplte(false);
     setProgress(0);
 
     const arr = new Array(count).fill(null).map((_, idx) => {
       if (list.length) {
-        const el = document.getElementById(`${itemOptions.id}${idx}`);
+        const el = document.getElementById(`${itemOpt.id}${idx}`);
 
         if (el) {
-          el.classList.remove(...itemOptions.class.complete);
-          el.style.width = itemOptions.width;
-          el.style.left = `calc(${itemOptions.width} * ${idx} + ${itemOptions.gap} * ${idx})`;
+          el.classList.remove(...itemOpt.class.complete);
+          el.style.width = itemOpt.width;
+          el.style.left = `calc(${itemOpt.width} * ${idx} + ${itemOpt.gap} * ${idx})`;
         }
       }
 
@@ -46,79 +52,82 @@ const SelectionSort = ({ count }: Props) => {
     });
 
     setList(arr);
-  }, [count, list]);
+  }, [count, itemOpt, list]);
 
-  const sortSelection = useCallback(async (arr: List) => {
-    setIsPending(true);
+  const sortSelection = useCallback(
+    async (arr: List) => {
+      setIsPending(true);
 
-    const container: Container = containerRef.current;
-    const lastIndex = arr.length - 1;
+      const container: Container = containerRef.current;
+      const lastIndex = arr.length - 1;
 
-    for (let pointer = 0; pointer <= lastIndex; pointer++) {
-      const compare = pointer + 1;
-      let selected = pointer;
+      for (let pointer = 0; pointer <= lastIndex; pointer++) {
+        const compare = pointer + 1;
+        let selected = pointer;
 
-      for (let idx = compare; idx <= lastIndex; idx++) {
-        const target: Target = container?.querySelector(
-          `#${itemOptions.id}${arr[selected].key}`
-        );
-        const compareTarget: Target = container?.querySelector(
-          `#${itemOptions.id}${arr[idx].key}`
-        );
+        for (let idx = compare; idx <= lastIndex; idx++) {
+          const target: Target = container?.querySelector(
+            `#${itemOpt.id}${arr[selected].key}`
+          );
+          const compareTarget: Target = container?.querySelector(
+            `#${itemOpt.id}${arr[idx].key}`
+          );
 
-        if (target && compareTarget) {
-          target.classList.add(...itemOptions.class.compare);
-          compareTarget.classList.add(...itemOptions.class.compare);
+          if (target && compareTarget) {
+            target.classList.add(...itemOpt.class.compare);
+            compareTarget.classList.add(...itemOpt.class.compare);
 
-          await delay(itemOptions.delay);
+            await delay(itemOpt.delay);
 
-          if (arr[selected].value > arr[idx].value) {
-            target.classList.remove(...itemOptions.class.seleted);
-            compareTarget.classList.add(...itemOptions.class.seleted);
+            if (arr[selected].value > arr[idx].value) {
+              target.classList.remove(...itemOpt.class.seleted);
+              compareTarget.classList.add(...itemOpt.class.seleted);
 
-            selected = idx;
-          } else {
-            target.classList.add(...itemOptions.class.seleted);
-            compareTarget.classList.remove(...itemOptions.class.seleted);
+              selected = idx;
+            } else {
+              target.classList.add(...itemOpt.class.seleted);
+              compareTarget.classList.remove(...itemOpt.class.seleted);
+            }
+
+            await delay(itemOpt.delay);
+
+            target.classList.remove(...itemOpt.class.compare);
+            compareTarget.classList.remove(...itemOpt.class.compare);
           }
+        }
 
-          await delay(itemOptions.delay);
+        const pointerTarget: Target = container?.querySelector(
+          `#${itemOpt.id}${arr[pointer].key}`
+        );
+        const selectedTarget: Target = container?.querySelector(
+          `#${itemOpt.id}${arr[selected].key}`
+        );
 
-          target.classList.remove(...itemOptions.class.compare);
-          compareTarget.classList.remove(...itemOptions.class.compare);
+        if (pointerTarget && selectedTarget) {
+          await delay(itemOpt.delay);
+
+          [arr[pointer], arr[selected]] = [arr[selected], arr[pointer]];
+          [pointerTarget.style.left, selectedTarget.style.left] = [
+            selectedTarget.style.left,
+            pointerTarget.style.left,
+          ];
+
+          await delay(itemOpt.delay);
+
+          selectedTarget.classList.add(...itemOpt.class.complete);
+          selectedTarget.classList.remove(...itemOpt.class.seleted);
+
+          setProgress(((pointer + 1) / (lastIndex + 1)) * 100);
+
+          await delay(itemOpt.delay);
         }
       }
 
-      const pointerTarget: Target = container?.querySelector(
-        `#${itemOptions.id}${arr[pointer].key}`
-      );
-      const selectedTarget: Target = container?.querySelector(
-        `#${itemOptions.id}${arr[selected].key}`
-      );
-
-      if (pointerTarget && selectedTarget) {
-        await delay(itemOptions.delay);
-
-        [arr[pointer], arr[selected]] = [arr[selected], arr[pointer]];
-        [pointerTarget.style.left, selectedTarget.style.left] = [
-          selectedTarget.style.left,
-          pointerTarget.style.left,
-        ];
-
-        await delay(itemOptions.delay);
-
-        selectedTarget.classList.add(...itemOptions.class.complete);
-        selectedTarget.classList.remove(...itemOptions.class.seleted);
-
-        setProgress(((pointer + 1) / (lastIndex + 1)) * 100);
-
-        await delay(itemOptions.delay);
-      }
-    }
-
-    setIsComplte(true);
-    setIsPending(false);
-  }, []);
+      setIsComplte(true);
+      setIsPending(false);
+    },
+    [itemOpt]
+  );
 
   useEffect(() => {
     initialize();
@@ -138,11 +147,11 @@ const SelectionSort = ({ count }: Props) => {
           {list?.map((obj, idx) => {
             return (
               <SortItem
-                id={`${itemOptions.id}${obj.key}`}
-                key={`${itemOptions.id}${obj.key}`}
+                id={`${itemOpt.id}${obj.key}`}
+                key={`${itemOpt.id}${obj.key}`}
                 style={{
-                  width: itemOptions.width,
-                  left: `calc(${itemOptions.width} * ${idx} + ${itemOptions.gap} * ${idx})`,
+                  width: itemOpt.width,
+                  left: `calc(${itemOpt.width} * ${idx} + ${itemOpt.gap} * ${idx})`,
                 }}
               >
                 {obj.value}

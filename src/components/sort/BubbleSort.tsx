@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { itemOptions } from "@/app/constant/sort";
 import { delay } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import SortItem from "./SortItem";
+import SortItem from "@/components/sort/SortItem";
 
 interface Props {
   count: number;
@@ -14,26 +15,6 @@ type Container = HTMLDivElement | null;
 type List = { key: number; value: number }[];
 type Target = HTMLDivElement | null | undefined;
 
-const item: {
-  class: {
-    compare: string[];
-    complete: string[];
-  };
-  delay: number;
-  id: string;
-  gap: string;
-  width: string;
-} = {
-  class: {
-    compare: ["bg-blue-200", "border-0"],
-    complete: ["bg-slate-200"],
-  },
-  delay: 500,
-  id: "bubble-item-",
-  gap: "10px",
-  width: "60px",
-};
-
 const BubbleSort = ({ count }: Props) => {
   const containerRef = useRef<Container>(null);
   const [list, setList] = useState<List>([]);
@@ -41,18 +22,26 @@ const BubbleSort = ({ count }: Props) => {
   const [isPending, setIsPending] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
 
+  const itemOpt = useMemo(
+    () => ({
+      ...itemOptions,
+      id: "bubble-item-",
+    }),
+    []
+  );
+
   const initialize = useCallback(() => {
     setIsComplte(false);
     setProgress(0);
 
     const arr = new Array(count).fill(null).map((_, idx) => {
       if (list.length) {
-        const el = document.getElementById(`${item.id}${idx}`);
+        const el = document.getElementById(`${itemOpt.id}${idx}`);
 
         if (el) {
-          el.classList.remove(...item.class.complete);
-          el.style.width = item.width;
-          el.style.left = `calc(${item.width} * ${idx} + ${item.gap} * ${idx})`;
+          el.classList.remove(...itemOpt.class.complete);
+          el.style.width = itemOpt.width;
+          el.style.left = `calc(${itemOpt.width} * ${idx} + ${itemOpt.gap} * ${idx})`;
         }
       }
 
@@ -63,69 +52,76 @@ const BubbleSort = ({ count }: Props) => {
     });
 
     setList(arr);
-  }, [count, list]);
+  }, [count, itemOpt, list]);
 
-  const sortBubble = useCallback(async (arr: List) => {
-    setIsPending(true);
+  const sortBubble = useCallback(
+    async (arr: List) => {
+      setIsPending(true);
 
-    const container: Container = containerRef.current;
+      const container: Container = containerRef.current;
+      const maxIndex = arr.length - 1;
 
-    for (let max = arr.length - 1; max > 0; max--) {
-      for (let idx = 0; idx < max; idx++) {
-        const target: Target = container?.querySelector(
-          `#${item.id}${arr[idx].key}`
-        );
-        const compareTarget: Target = container?.querySelector(
-          `#${item.id}${arr[idx + 1].key}`
-        );
-        const bol = arr[idx].value > arr[idx + 1].value;
+      for (let lastIndex = maxIndex; lastIndex > 0; lastIndex--) {
+        for (let pointer = 0; pointer < lastIndex; pointer++) {
+          const target: Target = container?.querySelector(
+            `#${itemOpt.id}${arr[pointer].key}`
+          );
+          const compareTarget: Target = container?.querySelector(
+            `#${itemOpt.id}${arr[pointer + 1].key}`
+          );
+          const isChange = arr[pointer].value > arr[pointer + 1].value;
 
-        if (target && compareTarget) {
-          container &&
-            container.parentElement &&
-            (container.parentElement.scrollLeft = target.offsetLeft);
+          if (target && compareTarget) {
+            container &&
+              container.parentElement &&
+              (container.parentElement.scrollLeft = target.offsetLeft);
 
-          target.classList.add(...item.class.compare);
-          compareTarget.classList.add(...item.class.compare);
+            target.classList.add(...itemOpt.class.compare);
+            compareTarget.classList.add(...itemOpt.class.compare);
 
-          await delay(item.delay);
+            await delay(itemOpt.delay);
 
-          if (bol) {
-            [target.style.left, compareTarget.style.left] = [
-              compareTarget.style.left,
-              target.style.left,
-            ];
+            if (isChange) {
+              [target.style.left, compareTarget.style.left] = [
+                compareTarget.style.left,
+                target.style.left,
+              ];
 
-            [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
-          }
-
-          await delay(item.delay);
-
-          target.classList.remove(...item.class.compare);
-          compareTarget.classList.remove(...item.class.compare);
-
-          await delay(item.delay);
-
-          if (max === idx + 1) {
-            bol
-              ? target.classList.add(...item.class.complete)
-              : compareTarget.classList.add(...item.class.complete);
-
-            if (max === 1) {
-              target.classList.add(...item.class.complete);
-              compareTarget.classList.add(...item.class.complete);
+              [arr[pointer], arr[pointer + 1]] = [
+                arr[pointer + 1],
+                arr[pointer],
+              ];
             }
 
-            setProgress(((arr.length - max) / (arr.length - 1)) * 100);
-            await delay(item.delay);
+            await delay(itemOpt.delay);
+
+            target.classList.remove(...itemOpt.class.compare);
+            compareTarget.classList.remove(...itemOpt.class.compare);
+
+            await delay(itemOpt.delay);
+
+            if (lastIndex === pointer + 1) {
+              isChange
+                ? target.classList.add(...itemOpt.class.complete)
+                : compareTarget.classList.add(...itemOpt.class.complete);
+
+              if (lastIndex === 1) {
+                target.classList.add(...itemOpt.class.complete);
+                compareTarget.classList.add(...itemOpt.class.complete);
+              }
+
+              setProgress(((arr.length - lastIndex) / maxIndex) * 100);
+              await delay(itemOpt.delay);
+            }
           }
         }
       }
-    }
 
-    setIsComplte(true);
-    setIsPending(false);
-  }, []);
+      setIsComplte(true);
+      setIsPending(false);
+    },
+    [itemOpt]
+  );
 
   useEffect(() => {
     initialize();
@@ -145,11 +141,11 @@ const BubbleSort = ({ count }: Props) => {
           {list?.map((obj, idx) => {
             return (
               <SortItem
-                id={`${item.id}${obj.key}`}
-                key={`${item.id}${obj.key}`}
+                id={`${itemOpt.id}${obj.key}`}
+                key={`${itemOpt.id}${obj.key}`}
                 style={{
-                  width: item.width,
-                  left: `calc(${item.width} * ${idx} + ${item.gap} * ${idx})`,
+                  width: itemOpt.width,
+                  left: `calc(${itemOpt.width} * ${idx} + ${itemOpt.gap} * ${idx})`,
                 }}
                 className="transition-all duration-700 absolute grid place-content-center aspect-[1/1] border shadow-md rounded"
               >
