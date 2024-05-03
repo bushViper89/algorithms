@@ -72,10 +72,6 @@ const BubbleSort = ({ count }: Props) => {
           const isChange = arr[pointer].value > arr[pointer + 1].value;
 
           if (target && compareTarget) {
-            container &&
-              container.parentElement &&
-              (container.parentElement.scrollLeft = target.offsetLeft);
-
             target.classList.add(...itemOpt.class.compare);
             compareTarget.classList.add(...itemOpt.class.compare);
 
